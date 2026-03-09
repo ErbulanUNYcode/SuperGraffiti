@@ -1,60 +1,56 @@
 ﻿
 using UdonSharp;
 using UnityEngine;
+using VRC.SDK3.Rendering;
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 
 public class Graffiti : UdonSharpBehaviour
 {
 	[SerializeField] private Material material;
+	[SerializeField] private Material alphaClear;
 	[SerializeField] private Spray[] sprays;
-	[SerializeField] private MeshFilter meshFilter;//quad
-	private Vector4[] matData;
-
+	private Vector4[] positions;
+	private Vector4[] rotations;
+	private Color[] colors;
+	[SerializeField] private MeshRenderer renderer;
+	private bool contOneFrame = true;
 	private void Start()
 	{
-		matData = new Vector4[sprays.Length * 4];
+		var cam = VRCCameraSettings.ScreenCamera;
+		var layers = cam.CullingMask;
+		layers.value &= ~(1 << LayerMask.NameToLayer("Default"));
+		cam.CullingMask = layers;
+
+		positions = new Vector4[sprays.Length];
+		rotations = new Vector4[sprays.Length];
+		colors = new Color[sprays.Length];
 	}
-	private void Update()
+
+	private void LateUpdate()
 	{
-		var count = 0;
-
-		foreach (var spray in sprays)
+		if (contOneFrame)
 		{
-			if (!spray.works) continue;
-
-			var poss = meshFilter.mesh.vertices;//quad has 4 vertices
-			var random = Random.value * 6.28318530718f;
-			for (int i = 0; i < 4; i++)
-			{
-				poss[i].x *= meshFilter.transform.localScale.x;
-				poss[i].y *= meshFilter.transform.localScale.y;
-				//offset
-				var pos = poss[i] - spray.pos + meshFilter.transform.position;
-				var eu = spray.rot;
-				//rotate y
-				var a = Mathf.Atan2(pos.x, pos.z) - eu.y;
-				var l = new Vector2(pos.x, pos.z).magnitude;
-				pos.x = Mathf.Sin(a) * l;
-				pos.z = Mathf.Cos(a) * l;
-				//rotate x
-				a = Mathf.Atan2(pos.y, pos.z) + eu.x;
-				l = new Vector2(pos.y, pos.z).magnitude;
-				pos.y = Mathf.Sin(a) * l;
-				pos.z = Mathf.Cos(a) * l;
-				//rotate z to random
-				a = Mathf.Atan2(pos.y, pos.x) + random;
-				l = new Vector2(pos.y, pos.x).magnitude;
-				pos.y = Mathf.Sin(a) * l;
-				pos.x = Mathf.Cos(a) * l;
-				pos /= 2;
-				matData[count * 4 + i] = new Vector4(pos.x, pos.y, pos.z, 0);
-			}
-
-			count++;
+			contOneFrame = false;
+			return;
 		}
+		renderer.material = alphaClear;
 
-		material.SetInt("_Count", count);
-		material.SetVectorArray("_Corners", matData);
+		int currentRight = -1;
+		int currentLeft = -1;
+		for (int i = 0; i < sprays.Length; i++)
+		{
+			var s = sprays[i];
+			positions[i] = s.pos;
+			rotations[i] = s.rot;
+			colors[i] = s.col;
+			if (s.isCurrentRight) currentRight = i;
+			if (s.isCurrentLeft) currentLeft = i;
+		}
+		material.SetVectorArray("_Pos", positions);
+		material.SetVectorArray("_Rot", rotations);
+		material.SetColorArray("_Col", colors);
+		material.SetInt("_CurrentR", currentRight);
+		material.SetInt("_CurrentL", currentLeft);
 	}
 }
