@@ -1067,7 +1067,7 @@ MonoBehaviour:
   colorPickMaterial: {fileID: 2100000, guid: cd632e72b3ae8624baf003d9eda5dffd, type: 2}
   pickup: {fileID: 1018481814}
   trafaretCam: {fileID: 1323458881}
-  grain: 0
+  grain: -1
 --- !u!4 &325477806
 Transform:
   m_ObjectHideFlags: 0
@@ -1927,7 +1927,7 @@ MonoBehaviour:
   colorPickMaterial: {fileID: 2100000, guid: cd632e72b3ae8624baf003d9eda5dffd, type: 2}
   pickup: {fileID: 638808958}
   trafaretCam: {fileID: 377853724}
-  grain: 0
+  grain: 3
 --- !u!4 &531956516
 Transform:
   m_ObjectHideFlags: 0
@@ -2151,7 +2151,7 @@ MonoBehaviour:
   colorPickMaterial: {fileID: 2100000, guid: cd632e72b3ae8624baf003d9eda5dffd, type: 2}
   pickup: {fileID: 1390887991}
   trafaretCam: {fileID: 1706537917}
-  grain: 0
+  grain: -3
 --- !u!4 &573686337
 Transform:
   m_ObjectHideFlags: 0
@@ -2824,7 +2824,7 @@ MonoBehaviour:
   colorPickMaterial: {fileID: 2100000, guid: cd632e72b3ae8624baf003d9eda5dffd, type: 2}
   pickup: {fileID: 423613403}
   trafaretCam: {fileID: 408070364}
-  grain: 0
+  grain: 2
 --- !u!4 &782528807
 Transform:
   m_ObjectHideFlags: 0
@@ -3517,6 +3517,37 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!1 &1012555513
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1012555514}
+  m_Layer: 0
+  m_Name: GrainPicker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1012555514
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012555513}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.157196, y: 2.0922928, z: -4.258}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1018481813
 GameObject:
   m_ObjectHideFlags: 0
@@ -6288,7 +6319,7 @@ MonoBehaviour:
   colorPickMaterial: {fileID: 2100000, guid: cd632e72b3ae8624baf003d9eda5dffd, type: 2}
   pickup: {fileID: 1374372150}
   trafaretCam: {fileID: 83413934}
-  grain: 0
+  grain: 1
 --- !u!4 &1556817628
 Transform:
   m_ObjectHideFlags: 0
@@ -8120,7 +8151,7 @@ MonoBehaviour:
   colorPickMaterial: {fileID: 2100000, guid: cd632e72b3ae8624baf003d9eda5dffd, type: 2}
   pickup: {fileID: 1609211277}
   trafaretCam: {fileID: 71733737}
-  grain: 0
+  grain: -2
 --- !u!4 &2139223277
 Transform:
   m_ObjectHideFlags: 0
@@ -8564,6 +8595,7 @@ SceneRoots:
   - {fileID: 408070364}
   - {fileID: 377853724}
   - {fileID: 1336633491}
+  - {fileID: 1012555514}
   - {fileID: 1321425155}
   - {fileID: 656101577}
   - {fileID: 146717256}

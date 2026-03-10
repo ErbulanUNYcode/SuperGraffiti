@@ -23,8 +23,8 @@ Shader "Graffiti/Render"
 
 		Pass
 		{
-			ZWrite Off
-			ZTest Off
+			ZWrite On
+			ZTest On
 			Blend One Zero
 
 			CGPROGRAM
@@ -36,7 +36,8 @@ Shader "Graffiti/Render"
 			float4 _Pos[8];
 			float4 _Rot[8];
 			fixed4 _Col[8];
-			int _Grain[8];
+			int4 _Grain1;
+			int4 _Grain2;
 			sampler2D  _TrafTex0;
 			sampler2D  _TrafTex1;
 			sampler2D  _TrafTex2;
@@ -167,7 +168,6 @@ Shader "Graffiti/Render"
 
 			float2 Spray(float3 dif,float2 rand,float power,int type,sampler2D trafTex,bool current)
 			{
-				float4 c;
 				float s,d,l,traf;
 				float2 r,result=0;
 
@@ -188,8 +188,8 @@ Shader "Graffiti/Render"
 								{
 									result.x = pow((1-l) * (1-d),4) * (1-traf);
 									if(current && result.x>0.001) result.y = 1;
-									result.x*=power;
 									if(type!=0) result.x = 0;
+									result.x*=power;
 								}
 							}
 							dif.xy*=2;
@@ -200,7 +200,7 @@ Shader "Graffiti/Render"
 				float3 difOrig = dif;
 				if(type>0)
 				{
-					s = 30/type;
+					s = 40/type;
 					dif*=s;
 					dif.xy-=(dif.xy+2048+rand)%1-0.5;
 					dif.z-=(dif.z+Rand(dif.xy+rand.yx*100))%1-0.5;
@@ -219,9 +219,9 @@ Shader "Graffiti/Render"
 								if(traf<1)
 								{
 									dif.xy *= 2;
-
-									result.x = dot((dif-difOrig)*s*2,(dif-difOrig)*s*2)<1;
-									result.x*=pow((1-l) * (1-d),4) * (1-traf)*power>Rand(dif.xy*dif.z*100);
+									r.x=dot((dif-difOrig)*s*2,(dif-difOrig)*s*2);
+									result.x = r.x<1;
+									result.x*=(pow((1-l) * (1-d),4) * (1-traf)*power>Rand(dif.xy*dif.z*100))*(1-r.x);
 								}
 							}
 						}
@@ -252,8 +252,9 @@ Shader "Graffiti/Render"
 									difOrig = (dif-difOrig)*s*2;
 									difOrig*=difOrig;
 									difOrig*=difOrig;
-									result.x = (difOrig.x+difOrig.y+difOrig.z)>2;
-									result.x*=pow((1-l) * (1-d),4) * (1-traf)*power*(2-dif.z)>Rand(dif.xy*dif.z*100);
+									r.x = (difOrig.x+difOrig.y+difOrig.z);
+									result.x = r.x>2;
+									result.x*=(pow((1-l) * (1-d),4) * (1-traf)*power*(2-dif.z)>Rand(dif.xy*dif.z*100))*min((r.x-2)*3,1);
 								}
 							}
 						}
@@ -282,7 +283,7 @@ Shader "Graffiti/Render"
 					i.dif1,
 					float2(_Pos[0].w,_Rot[0].w),
 					_Col[0].a*1.5,
-					_Grain[0],
+					_Grain1.x,
 					_TrafTex0,
 					_CurrentR==0||_CurrentL==0
 				);
@@ -296,7 +297,7 @@ Shader "Graffiti/Render"
 					i.dif2,
 					float2(_Pos[1].w,_Rot[1].w),
 					_Col[1].a*1.5,
-					_Grain[1],
+					_Grain1.y,
 					_TrafTex1,
 					_CurrentR==1||_CurrentL==1
 				);
@@ -310,7 +311,7 @@ Shader "Graffiti/Render"
 					i.dif3,
 					float2(_Pos[2].w,_Rot[2].w),
 					_Col[2].a*1.5,
-					_Grain[2],
+					_Grain1.z,
 					_TrafTex2,
 					_CurrentR==2||_CurrentL==2
 				);
@@ -324,7 +325,7 @@ Shader "Graffiti/Render"
 					i.dif4,
 					float2(_Pos[3].w,_Rot[3].w),
 					_Col[3].a*1.5,
-					_Grain[3],
+					_Grain1.w,
 					_TrafTex3,
 					_CurrentR==3||_CurrentL==3
 				);
@@ -338,7 +339,7 @@ Shader "Graffiti/Render"
 					i.dif5,
 					float2(_Pos[4].w,_Rot[4].w),
 					_Col[4].a*1.5,
-					_Grain[4],
+					_Grain2.x,
 					_TrafTex4,
 					_CurrentR==4||_CurrentL==4
 				);
@@ -352,7 +353,7 @@ Shader "Graffiti/Render"
 					i.dif6,
 					float2(_Pos[5].w,_Rot[5].w),
 					_Col[5].a*1.5,
-					_Grain[5],
+					_Grain2.y,
 					_TrafTex5,
 					_CurrentR==5||_CurrentL==5
 				);
@@ -366,7 +367,7 @@ Shader "Graffiti/Render"
 					i.dif7,
 					float2(_Pos[6].w,_Rot[6].w),
 					_Col[6].a*1.5,
-					_Grain[6],
+					_Grain2.z,
 					_TrafTex6,
 					_CurrentR==6||_CurrentL==6
 				);
@@ -380,7 +381,7 @@ Shader "Graffiti/Render"
 					i.dif8,
 					float2(_Pos[7].w,_Rot[7].w),
 					_Col[7].a*1.5,
-					_Grain[7],
+					_Grain2.w,
 					_TrafTex7,
 					_CurrentR==7||_CurrentL==7
 				);

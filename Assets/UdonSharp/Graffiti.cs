@@ -1,5 +1,4 @@
-﻿
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDK3.Rendering;
 
@@ -55,6 +54,8 @@ public class Graffiti : UdonSharpBehaviour
 		material.SetVectorArray("_Pos", positions);
 		material.SetVectorArray("_Rot", rotations);
 		material.SetColorArray("_Col", colors);
+		material.SetVector("_Grain1", new Vector4(sprays[0].gr, sprays[1].gr, sprays[2].gr, sprays[3].gr));
+		material.SetVector("_Grain2", new Vector4(sprays[4].gr, sprays[5].gr, sprays[6].gr, sprays[7].gr));
 		material.SetInt("_CurrentR", currentRight);
 		material.SetInt("_CurrentL", currentLeft);
 	}

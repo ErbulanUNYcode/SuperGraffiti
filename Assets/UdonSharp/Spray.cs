@@ -31,17 +31,14 @@ public class Spray : UdonSharpBehaviour
 		if (!localPlayer.IsUserInVR()) pickup.enabled = false;
 	}
 
-	private void LateUpdate()
+	private void Update()
 	{
 		trafaretCam.position = pickup.transform.position + pickup.transform.forward * 0.07f;
 		var rot = pickup.transform.eulerAngles;
 		rot.z = Random.Range(0, 360);
 		trafaretCam.eulerAngles = rot;
 		pickup.AutoHold = Networking.LocalPlayer.IsUserInVR() ? VRC_Pickup.AutoHoldMode.No : VRC_Pickup.AutoHoldMode.Yes;
-	}
 
-	public void Update()
-	{
 		if (!pickup.IsHeld)
 		{
 			if (color.a != 0 && Networking.IsOwner(gameObject))
