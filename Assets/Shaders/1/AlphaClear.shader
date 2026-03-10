@@ -1,4 +1,4 @@
-Shader "Unlit/ReRenderWithDraw"
+Shader "Grtaffiti/AlphaClear"
 {
 	Properties
 	{

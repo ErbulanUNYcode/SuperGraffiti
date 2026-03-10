@@ -13,10 +13,10 @@ public class Spray : UdonSharpBehaviour
 	[SerializeField] private Material colorPickMaterial;
 	[SerializeField] private VRCPickup pickup;
 	[SerializeField] private Transform trafaretCam;
-	[SerializeField] private float grain;
+	[SerializeField] private int grain;
 
 	public Vector3 pos => pickup.transform.position;
-	public Vector2 rot => pickup.transform.eulerAngles / 180 * 3.14159265358979f;
+	public Vector3 rot => trafaretCam.eulerAngles / 180 * 3.14159265358979f;
 	public Color col => color;
 	public float gr => grain;
 	public bool isCurrentRight => pickup.IsHeld && pickup.currentPlayer == localPlayer && pickup.currentHand == VRC_Pickup.PickupHand.Right;
@@ -35,12 +35,12 @@ public class Spray : UdonSharpBehaviour
 	{
 		trafaretCam.position = pickup.transform.position + pickup.transform.forward * 0.07f;
 		var rot = pickup.transform.eulerAngles;
-		rot.z = 0;
+		rot.z = Random.Range(0, 360);
 		trafaretCam.eulerAngles = rot;
 		pickup.AutoHold = Networking.LocalPlayer.IsUserInVR() ? VRC_Pickup.AutoHoldMode.No : VRC_Pickup.AutoHoldMode.Yes;
 	}
 
-	private void Update()
+	public void Update()
 	{
 		if (!pickup.IsHeld)
 		{
@@ -49,6 +49,7 @@ public class Spray : UdonSharpBehaviour
 				color.a = 0;
 				RequestSerialization();
 			}
+			//pickup.enabled = true;
 			return;
 		}
 

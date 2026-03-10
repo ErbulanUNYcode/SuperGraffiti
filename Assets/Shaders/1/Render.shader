@@ -1,4 +1,4 @@
-Shader "Custom/VertexMove"
+Shader "Graffiti/Render"
 {
 	Properties
 	{
@@ -36,6 +36,7 @@ Shader "Custom/VertexMove"
 			float4 _Pos[8];
 			float4 _Rot[8];
 			fixed4 _Col[8];
+			int _Grain[8];
 			sampler2D  _TrafTex0;
 			sampler2D  _TrafTex1;
 			sampler2D  _TrafTex2;
@@ -134,9 +135,9 @@ Shader "Custom/VertexMove"
 					dif.z -= 0.07;
 					dif.z/=4;
 					//z
-					/*d = length(dif.xy);
-					a = atan2(dif.x, dif.y);
-					dif.xy = float2(sin(a), cos(a)) * d;*/
+					d = length(dif.xy);
+					a = atan2(dif.x, dif.y) + _Rot[i].z;
+					dif.xy = float2(sin(a), cos(a)) * d;
 
 					dif*=2;
 
@@ -155,6 +156,114 @@ Shader "Custom/VertexMove"
 				return o;
 			}
 
+
+			float Rand(int2 p)
+			{
+				uint n = asuint(p.x) * 1973u + asuint(p.y) * 9277u + 26699u;
+				n = (n << 13u) ^ n;
+				return (float)((n * (n * n * 15731u + 789221u) + 1376312589u) & 0x7fffffffu) / 2147483648.0;
+			}
+
+
+			float2 Spray(float3 dif,float2 rand,float power,int type,sampler2D trafTex,bool current)
+			{
+				float4 c;
+				float s,d,l,traf;
+				float2 r,result=0;
+
+				if(type==0 || current)
+				{
+					if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
+					{
+						r = dif.xy/dif.z;
+						d = dot(r,r);
+						if(d < 1)
+						{
+							dif.xy *= 0.5;
+							l = dot(dif,dif);
+							if(l < 1)
+							{
+								traf = tex2D(trafTex,dif.xy/dif.z+0.5).a;
+								if(traf<1)
+								{
+									result.x = pow((1-l) * (1-d),4) * (1-traf);
+									if(current && result.x>0.001) result.y = 1;
+									result.x*=power;
+									if(type!=0) result.x = 0;
+								}
+							}
+							dif.xy*=2;
+						}
+					}
+				}
+
+				float3 difOrig = dif;
+				if(type>0)
+				{
+					s = 30/type;
+					dif*=s;
+					dif.xy-=(dif.xy+2048+rand)%1-0.5;
+					dif.z-=(dif.z+Rand(dif.xy+rand.yx*100))%1-0.5;
+					dif/=s;
+					if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
+					{
+						r = dif.xy/dif.z;
+						d = dot(r,r);
+						if(d < 1)
+						{
+							dif.xy *= 0.5;
+							l = dot(dif,dif);
+							if(l < 1)
+							{
+								traf = tex2D(trafTex,dif.xy/dif.z+0.5).a;
+								if(traf<1)
+								{
+									dif.xy *= 2;
+
+									result.x = dot((dif-difOrig)*s*2,(dif-difOrig)*s*2)<1;
+									result.x*=pow((1-l) * (1-d),4) * (1-traf)*power>Rand(dif.xy*dif.z*100);
+								}
+							}
+						}
+					}
+				}
+				else if(type<0)
+				{
+					s = -10/type;
+					dif*=s;
+					dif.xy-=(dif.xy+2048+rand)%1-0.5;
+					dif.z-=(dif.z+Rand(dif.xy+rand.yx*100))%1-0.5;
+					dif/=s;
+					if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
+					{
+						r = dif.xy/dif.z;
+						d = dot(r,r);
+						if(d < 1)
+						{
+							dif.xy *= 0.5;
+							l = dot(dif,dif);
+							if(l < 1)
+							{
+								traf = tex2D(trafTex,dif.xy/dif.z+0.5).a;
+								if(traf<1)
+								{
+									dif.xy *= 2;
+									difOrig+=(difOrig<=dif?0.5:-0.5)/s;
+									difOrig = (dif-difOrig)*s*2;
+									difOrig*=difOrig;
+									difOrig*=difOrig;
+									result.x = (difOrig.x+difOrig.y+difOrig.z)>2;
+									result.x*=pow((1-l) * (1-d),4) * (1-traf)*power*(2-dif.z)>Rand(dif.xy*dif.z*100);
+								}
+							}
+						}
+					}
+				}
+
+				return result;
+			}
+
+
 			fixed4 frag (v2f i) : SV_Target
 			{
 				uint width, height;
@@ -167,213 +276,117 @@ Shader "Custom/VertexMove"
 				float al,d,l,traf;
 				float2 r;
 				
-				dif = i.dif1;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex0,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[0];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==0||_CurrentL==0) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
+				_Col[0].rgb*=_Col[0].rgb;
+				float2 sp = Spray
+				(
+					i.dif1,
+					float2(_Pos[0].w,_Rot[0].w),
+					_Col[0].a*1.5,
+					_Grain[0],
+					_TrafTex0,
+					_CurrentR==0||_CurrentL==0
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[0].xyz*_Col[0].xyz*sp.x;
+				col.a=sp.y;
 				
-				dif = i.dif2;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex1,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[1];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==1||_CurrentL==1) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
-				
-				dif = i.dif3;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex2,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[2];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==2||_CurrentL==2) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
-				
-				dif = i.dif4;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex3,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[3];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==3||_CurrentL==3) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
-				
-				dif = i.dif5;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex4,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[4];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==4||_CurrentL==4) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
-				
-				dif = i.dif6;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex5,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[5];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==5||_CurrentL==5) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
-				
-				dif = i.dif7;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex6,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[6];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==6||_CurrentL==6) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
-				
-				dif = i.dif8;
-				if(dif.z > 0 && dif.z+0.05 > abs(dif.x) && dif.z+0.05 > abs(dif.y))
-				{
-					float traf = tex2D(_TrafTex7,dif.xy/dif.z/2+0.5).a;
-					if(traf<1)
-					{
-						r = dif.xy/dif.z;
-						d = dot(r,r);
-						if(d < 1)//-1%
-						{
-							dif.xy /= 2;
-							l = dot(dif,dif);
-							if(l < 1)
-							{
-								c = _Col[7];
-								c*=c;
-								al = pow((1-l) * (1-d),4) * (1-traf);
-								if((_CurrentR==7||_CurrentL==7) && al>0.001) col.a = 1;
-								al*=c.a;
-								col.rgb *= 1 - al;
-								col.rgb += al * c.rgb;
-							}
-						}
-					}
-				}
+				_Col[1].rgb*=_Col[1].rgb;
+				sp = Spray
+				(
+					i.dif2,
+					float2(_Pos[1].w,_Rot[1].w),
+					_Col[1].a*1.5,
+					_Grain[1],
+					_TrafTex1,
+					_CurrentR==1||_CurrentL==1
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[1].xyz*_Col[1].xyz*sp.x;
+				col.a+=sp.y;
+
+				_Col[2].rgb*=_Col[2].rgb;
+				sp = Spray
+				(
+					i.dif3,
+					float2(_Pos[2].w,_Rot[2].w),
+					_Col[2].a*1.5,
+					_Grain[2],
+					_TrafTex2,
+					_CurrentR==2||_CurrentL==2
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[2].xyz*_Col[2].xyz*sp.x;
+				col.a+=sp.y;
+
+				_Col[3].rgb*=_Col[3].rgb;
+				sp = Spray
+				(
+					i.dif4,
+					float2(_Pos[3].w,_Rot[3].w),
+					_Col[3].a*1.5,
+					_Grain[3],
+					_TrafTex3,
+					_CurrentR==3||_CurrentL==3
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[3].xyz*_Col[3].xyz*sp.x;
+				col.a+=sp.y;
+
+				_Col[4].rgb*=_Col[4].rgb;
+				sp = Spray
+				(
+					i.dif5,
+					float2(_Pos[4].w,_Rot[4].w),
+					_Col[4].a*1.5,
+					_Grain[4],
+					_TrafTex4,
+					_CurrentR==4||_CurrentL==4
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[4].xyz*_Col[4].xyz*sp.x;
+				col.a+=sp.y;
+
+				_Col[5].rgb*=_Col[5].rgb;
+				sp = Spray
+				(
+					i.dif6,
+					float2(_Pos[5].w,_Rot[5].w),
+					_Col[5].a*1.5,
+					_Grain[5],
+					_TrafTex5,
+					_CurrentR==5||_CurrentL==5
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[5].xyz*_Col[5].xyz*sp.x;
+				col.a+=sp.y;
+
+				_Col[6].rgb*=_Col[6].rgb;
+				sp = Spray
+				(
+					i.dif7,
+					float2(_Pos[6].w,_Rot[6].w),
+					_Col[6].a*1.5,
+					_Grain[6],
+					_TrafTex6,
+					_CurrentR==6||_CurrentL==6
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[6].xyz*_Col[6].xyz*sp.x;
+				col.a+=sp.y;
+
+				_Col[7].rgb*=_Col[7].rgb;
+				sp = Spray
+				(
+					i.dif8,
+					float2(_Pos[7].w,_Rot[7].w),
+					_Col[7].a*1.5,
+					_Grain[7],
+					_TrafTex7,
+					_CurrentR==7||_CurrentL==7
+				);
+				col.xyz*=1-sp.x;
+				col.xyz+=_Col[7].xyz*_Col[7].xyz*sp.x;
+				col.a+=sp.y;
 
 				return col;
 			}

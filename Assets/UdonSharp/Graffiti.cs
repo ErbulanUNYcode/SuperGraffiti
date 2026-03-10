@@ -7,6 +7,7 @@ using VRC.SDK3.Rendering;
 
 public class Graffiti : UdonSharpBehaviour
 {
+	[SerializeField] private GameObject colorPicker;
 	[SerializeField] private Material material;
 	[SerializeField] private Material alphaClear;
 	[SerializeField] private Spray[] sprays;
@@ -29,6 +30,7 @@ public class Graffiti : UdonSharpBehaviour
 
 	private void LateUpdate()
 	{
+
 		if (contOneFrame)
 		{
 			contOneFrame = false;
@@ -42,11 +44,14 @@ public class Graffiti : UdonSharpBehaviour
 		{
 			var s = sprays[i];
 			positions[i] = s.pos;
+			positions[i].w = Random.value;
 			rotations[i] = s.rot;
+			rotations[i].w = Random.value;
 			colors[i] = s.col;
 			if (s.isCurrentRight) currentRight = i;
 			if (s.isCurrentLeft) currentLeft = i;
 		}
+		if (currentRight == -1) colorPicker.SetActive(false);
 		material.SetVectorArray("_Pos", positions);
 		material.SetVectorArray("_Rot", rotations);
 		material.SetColorArray("_Col", colors);
