@@ -15,7 +15,7 @@ public class Spray : UdonSharpBehaviour
 	[SerializeField] private Transform trafaretCam;
 	[SerializeField] private int grain;
 
-	public Vector3 pos => pickup.transform.position;
+	public Vector3 pos => pickup.transform.position + Vector3.down * 20;
 	public Vector3 rot => trafaretCam.eulerAngles / 180 * 3.14159265358979f;
 	public Color col => color;
 	public float gr => grain;
