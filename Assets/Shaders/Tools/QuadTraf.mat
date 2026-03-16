@@ -73,7 +73,7 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _Radius: 0
-    - _Round: 0.01
+    - _Round: 0.5
     - _Sides: -25.25
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
