@@ -36,8 +36,8 @@ Shader "Graffiti/Render"
 			float4 _Pos[8];
 			float4 _Rot[8];
 			fixed4 _Col[8];
-			int4 _Grain1;
-			int4 _Grain2;
+			float4 _Grain1;
+			float4 _Grain2;
 			sampler2D  _TrafTex0;
 			sampler2D  _TrafTex1;
 			sampler2D  _TrafTex2;
@@ -166,7 +166,7 @@ Shader "Graffiti/Render"
 			}
 
 
-			float2 Spray(float3 dif,float2 rand,float power,int type,sampler2D trafTex,bool current)
+			float2 Spray(float3 dif,float2 rand,float power,float type,sampler2D trafTex,bool current)
 			{
 				float s,d,l,traf;
 				float2 r,result=0;
@@ -272,10 +272,7 @@ Shader "Graffiti/Render"
 				int2 pixelCoord = int2(i.uv.x * width, i.uv.y * height);
 				float4 col = _MainTex.Load(int3(pixelCoord, 0));
 				col.a=0;
-				float3 dif;
-				float4 c;
-				float al,d,l,traf;
-				float2 r;
+				float old = col;
 				
 				_Col[0].rgb*=_Col[0].rgb;
 				float2 sp = Spray
@@ -389,7 +386,9 @@ Shader "Graffiti/Render"
 				col.xyz+=_Col[7].xyz*_Col[7].xyz*sp.x;
 				col.a+=sp.y;
 
-				return col;
+				if(all(col == old)) clip(-1);
+
+				return min(col,0.999);
 			}
 			ENDCG
 		}

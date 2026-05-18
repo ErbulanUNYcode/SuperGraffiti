@@ -16,7 +16,7 @@ public class TextStencil : UdonSharpBehaviour
 	[SerializeField] private TextMeshProUGUI[] fonts;
 	[SerializeField] private TMP_InputField inputField;
 
-	[UdonSynced] private string text = "Text";
+	[UdonSynced] private string text = "TonyEric";
 	[UdonSynced] private bool reverse = false;
 	[UdonSynced] private float size = 1f;
 	[UdonSynced] private int font = 0;
