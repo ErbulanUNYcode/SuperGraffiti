@@ -25,6 +25,7 @@ public class Spray : UdonSharpBehaviour
 	[SerializeField] private Sprite circles;
 	[SerializeField] private VRCPickup pickup;
 	[SerializeField] private Transform trafaretCam;
+	[SerializeField] private Transform sprayHead;
 
 	public Vector3 pos => trafaretCam.transform.position + Vector3.down * 20 - trafaretCam.transform.forward * 0.07f;
 	public Vector3 rot => trafaretCam.eulerAngles / 180 * 3.14159265358979f;
@@ -39,6 +40,7 @@ public class Spray : UdonSharpBehaviour
 
 	private void Start()
 	{
+		color = sprayMaterial.GetColor("_Color");
 		localPlayer = Networking.LocalPlayer;
 		if (!localPlayer.IsUserInVR()) pickup.enabled = false;
 	}
@@ -48,6 +50,7 @@ public class Spray : UdonSharpBehaviour
 		if (color.a == 0 && currentRuler != null) currentRuler.SetPosition(pickup.transform.position + pickup.transform.forward * 0.07f);
 
 		trafaretCam.position = currentRuler != null ? currentRuler.GetPosition(pickup.transform.position + pickup.transform.forward * 0.07f) : pickup.transform.position + pickup.transform.forward * 0.07f;
+		sprayHead.position = trafaretCam.position;
 		var rot = pickup.transform.eulerAngles;
 		rot.z = Random.Range(0, 360);
 		trafaretCam.eulerAngles = rot;

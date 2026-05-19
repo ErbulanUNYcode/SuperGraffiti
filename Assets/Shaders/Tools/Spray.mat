@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Spray 3
-  m_Shader: {fileID: 4800000, guid: 90a91de2df5a91046b0628ad655d0985, type: 3}
+  m_Name: Spray
+  m_Shader: {fileID: 4800000, guid: 96e662ebe98484e40bb2aa2a14ab1392, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -52,7 +52,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 306dea9a26d21e4498fca2fae4fe5d03, type: 3}
+        m_Texture: {fileID: 2800000, guid: 6a65cf1c62c5a294eac794207d20d44e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -76,7 +76,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Metallic: 0.03
+    - _Metallic: 0.01
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -87,6 +87,6 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0, g: 1, b: 0, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

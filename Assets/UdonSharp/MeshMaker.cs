@@ -198,25 +198,51 @@ public class MeshMakerEditor : Editor
 		GUILayout.BeginHorizontal();
 		if (GUILayout.Button("Add Point"))
 		{
-			EditorUtility.SetDirty(this);
-			selects.Add(selected.Length);
+			if (selects.Count == 0)
+			{
+				selects.Add(selected.Length);
 
-			var posList = positions.ToList();
-			posList.Add(Vector3.zero);
-			positions = posList.ToArray();
+				var posList = positions.ToList();
+				posList.Add(Vector3.zero);
+				positions = posList.ToArray();
 
-			var selList = selected.ToList();
-			selList.Add(true);
-			selected = selList.ToArray();
+				var selList = selected.ToList();
+				selList.Add(true);
+				selected = selList.ToArray();
 
-			var colList = colors.ToList();
-			colList.Add(Color.white);
-			colors = colList.ToArray();
+				var colList = colors.ToList();
+				colList.Add(Color.white);
+				colors = colList.ToArray();
 
-			var uvList = uv.ToList();
-			uvList.Add(Vector2.zero);
-			uv = uvList.ToArray();
+				var uvList = uv.ToList();
+				uvList.Add(Vector2.zero);
+				uv = uvList.ToArray();
+			}
+			else
+			{
+				var posList = positions.ToList();
+				var colList = colors.ToList();
+				var uvList = uv.ToList();
+				for (int i = 0; i < selects.Count; i++)
+				{
+					posList.Add(positions[selects[i]]);
 
+					colList.Add(colors[selects[i]]);
+
+					uvList.Add(uv[selects[i]]);
+				}
+				positions = posList.ToArray();
+				colors = colList.ToArray();
+				uv = uvList.ToArray();
+				selected = new bool[positions.Length];
+				//select last added points
+				for (int i = 0; i < selects.Count; i++)
+				{
+					var id = positions.Length - selects.Count + i;
+					selects[i] = id;
+					selected[id] = true;
+				}
+			}
 			mesh.vertices = positions.ToArray();
 			mesh.colors = colors.ToArray();
 			mesh.uv = uv.ToArray();
