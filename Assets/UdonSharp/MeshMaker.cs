@@ -5,6 +5,8 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+[RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
 public class MeshMaker : MonoBehaviour
 {
 	[NonSerialized]
@@ -56,7 +58,7 @@ public class MeshMaker : MonoBehaviour
 
 		mesh.vertices = points;
 		mesh.uv = uv;
-		mesh.name = "Spray";
+		mesh.name = meshF.name;
 		meshF.sharedMesh = mesh;
 		//save new mesh in assets
 		AssetDatabase.CreateAsset(mesh, "Assets/" + mesh.name + ".asset");
@@ -76,8 +78,10 @@ public class MeshMakerEditor : Editor
 	private Vector2[] uv;
 	private Texture2D uvRefTex;
 	private bool showUVEditor;
+	private int currentUV = 1;
 
-	private void OnEnable()
+	private void OnEnable() { UpdateData(); }
+	private void UpdateData()
 	{
 		uvRefTex = new Texture2D(32, 32);
 		uvRefTex.wrapMode = TextureWrapMode.Clamp;
@@ -97,7 +101,7 @@ public class MeshMakerEditor : Editor
 		if (mesh == null)
 		{
 			mesh = new Mesh();
-			mesh.name = "MeshMaker";
+			mesh.name = maker.name;
 			maker.meshFilter.sharedMesh = mesh;
 		}
 		positions = mesh.vertices;
@@ -196,7 +200,7 @@ public class MeshMakerEditor : Editor
 
 		#region ADD/DELETE POINTS
 		GUILayout.BeginHorizontal();
-		if (GUILayout.Button("Add Point"))
+		if (GUILayout.Button(selects.Count == 0 ? "Add Point" : selects.Count == 1 ? "Copy point" : "Copy points"))
 		{
 			if (selects.Count == 0)
 			{
@@ -382,8 +386,8 @@ public class MeshMakerEditor : Editor
 		if (!editMode) return;
 		//target component
 		var maker = (MeshMaker)target;
-		if (maker.meshFilter.sharedMesh == null) OnEnable();
-		if (maker.meshFilter.sharedMesh != mesh) OnEnable();
+		if (maker.meshFilter.sharedMesh == null) UpdateData();
+		if (maker.meshFilter.sharedMesh != mesh) UpdateData();
 		Event e = Event.current;
 
 		if (e.shift)
