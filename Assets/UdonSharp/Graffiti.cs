@@ -9,7 +9,7 @@ public class Graffiti : UdonSharpBehaviour
 	[SerializeField] private GameObject colorPicker;
 	[SerializeField] private GameObject grainChanger;
 	[SerializeField] private Material material;
-	[SerializeField] private Material alphaClear;
+	[SerializeField] private Material alphaClearMaterial;
 	[SerializeField] private Spray[] sprays;
 	[SerializeField] private ReadRenderTexture RTSync;
 	private Vector4[] positions;
@@ -51,10 +51,14 @@ public class Graffiti : UdonSharpBehaviour
 			contOneFrame = false;
 			return;
 		}
-		meshRenderer.material = alphaClear;
+		meshRenderer.enabled = false;
 
 		int currentRight = -1;
 		int currentLeft = -1;
+
+		alphaClearMaterial.SetVectorArray("_Pos", positions);
+		alphaClearMaterial.SetVectorArray("_Rot", rotations);
+
 		for (int i = 0; i < sprays.Length; i++)
 		{
 			var s = sprays[i];
@@ -71,6 +75,7 @@ public class Graffiti : UdonSharpBehaviour
 			colorPicker.SetActive(false);
 			grainChanger.SetActive(false);
 		}
+
 		material.SetVectorArray("_Pos", positions);
 		material.SetVectorArray("_Rot", rotations);
 		material.SetColorArray("_Col", colors);

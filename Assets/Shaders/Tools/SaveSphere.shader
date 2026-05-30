@@ -34,6 +34,7 @@ Shader "Custom/SaveSphere"
                 float4 pos : SV_POSITION;
                 float4 objClip : TEXCOORD0;
                 nointerpolation float fov : TEXCOORD1;
+                nointerpolation float scale : TEXCOORD2;
             };
 
             v2f vert (appdata v)
@@ -43,18 +44,16 @@ Shader "Custom/SaveSphere"
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.objClip = UnityObjectToClipPos(float4(0,0,0,1));
                 o.fov = 1/abs(UNITY_MATRIX_P._m11);
+                o.scale = unity_ObjectToWorld._m00*3;
                 return o;
             }
 
             fixed4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target
             {
                 float2 screenUV = i.pos.xy / _ScreenParams.xy;
+
             #if (defined(SHADER_API_D3D11) || defined(SHADER_API_VULKAN)) && defined(UNITY_SINGLE_PASS_STEREO)
                 screenUV.x= frac(screenUV.x);
-            #endif
-
-            #if UNITY_UV_STARTS_AT_TOP
-                screenUV.y = screenUV.y;
             #endif
 
                 if(isFrontFace)
@@ -69,7 +68,7 @@ Shader "Custom/SaveSphere"
 
                     uv.x *= _ScreenParams.x / _ScreenParams.y;
 
-                    uv *= i.objClip.w * 5.0*i.fov;
+                    uv *= i.objClip.w * 5.0*i.fov/i.scale;
 
                     uv += 0.5;
 

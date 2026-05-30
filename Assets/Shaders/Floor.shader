@@ -42,6 +42,7 @@ Shader "Unlit/Floor"
             float _LineWidth;
             float _FadeDistance;
             fixed4 _Color;
+            float _Scale;
 
             v2f vert(appdata v)
             {
@@ -57,6 +58,10 @@ Shader "Unlit/Floor"
 
             fixed4 frag(v2f i) : SV_Target
             {
+                if(i.worldPos.y<20.005) discard;
+                _GridSize*=_Scale;
+                _FadeDistance*=(_Scale*min((i.worldPos.y-20)/_GridSize,1));
+
                 float2 gridUV = i.worldPos.xz / _GridSize;
 
                 float2 f = frac(gridUV);

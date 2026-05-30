@@ -47,30 +47,36 @@ public class Spray : UdonSharpBehaviour
 
 	private void Update()
 	{
-		if (color.a == 0 && currentRuler != null) currentRuler.SetPosition(pickup.transform.position + pickup.transform.forward * 0.07f);
+		if (!pickup.IsHeld)
+		{
+			trafaretCam.gameObject.SetActive(false);
+			if (color.a != 0 && Networking.IsOwner(gameObject))
+			{
+				color.a = 0;
+				RequestSerialization();
+			}
+			pickup.pickupable = true;
+			return;
+		}
 
-		trafaretCam.position = currentRuler != null ? currentRuler.GetPosition(pickup.transform.position + pickup.transform.forward * 0.07f) : pickup.transform.position + pickup.transform.forward * 0.07f;
+		var scale = pickup.currentPlayer.GetAvatarEyeHeightAsMeters() * 0.05f;
+		pickup.transform.localScale = Vector3.one * scale;
+
+		var poss = pickup.transform.position + scale * (pickup.transform.rotation * Vector3.forward) * 0.2f + scale * (pickup.transform.rotation * Vector3.up) * 2.06f;
+		if (color.a == 0 && currentRuler != null) currentRuler.SetPosition(poss);
+
+		trafaretCam.position = currentRuler != null ? currentRuler.GetPosition(poss) : poss;
 		sprayHead.position = trafaretCam.position;
 		var rot = pickup.transform.eulerAngles;
 		rot.z = Random.Range(0, 360);
 		trafaretCam.eulerAngles = rot;
 		pickup.AutoHold = Networking.LocalPlayer.IsUserInVR() ? VRC_Pickup.AutoHoldMode.No : VRC_Pickup.AutoHoldMode.Yes;
 
-		if (!pickup.IsHeld)
-		{
-			if (color.a != 0 && Networking.IsOwner(gameObject))
-			{
-				color.a = 0;
-				RequestSerialization();
-			}
-			//pickup.enabled = true;
-			return;
-		}
-
 		if (localPlayer != pickup.currentPlayer)
 		{
 			if (Networking.IsOwner(gameObject))
 				Networking.SetOwner(pickup.currentPlayer, gameObject);
+			pickup.pickupable = false;
 			return;
 		}
 
@@ -84,7 +90,7 @@ public class Spray : UdonSharpBehaviour
 		{
 			if (colorPicker.activeSelf)
 			{
-				var pos = pickup.transform.position + pickup.transform.forward * 0.15f;
+				var pos = sprayHead.position + pickup.transform.forward * 0.15f;
 
 				if (pos != Vector3.zero)
 
@@ -106,7 +112,7 @@ public class Spray : UdonSharpBehaviour
 
 			if (grainChanger.activeSelf)
 			{
-				grain.transform.position = pickup.transform.position + pickup.transform.forward * 0.15f;
+				grain.transform.position = sprayHead.position + pickup.transform.forward * 0.15f;
 				grain.transform.localPosition = new Vector3(Mathf.Abs(grain.transform.localPosition.x) > 0.15 ? Mathf.Clamp(grain.transform.localPosition.x, -0.75f, 0.75f) : 0, 0, 0);
 				grainMode = grain.transform.localPosition.x;
 				grainMode = Mathf.Max(0, Mathf.Abs(grainMode) - 0.15f) * (grainMode > 0 ? 4 : -4);
@@ -119,11 +125,16 @@ public class Spray : UdonSharpBehaviour
 		var power = localPlayer.IsUserInVR() ? Input.GetAxis(pickup.currentHand == VRC_Pickup.PickupHand.Right ? "Oculus_CrossPlatform_SecondaryIndexTrigger" : "Oculus_CrossPlatform_PrimaryIndexTrigger") : Input.GetMouseButton(0) ? 0.5f : 0;
 
 		color.a = power * power;
+
+		if (!trafaretCam.gameObject.activeSelf) trafaretCam.gameObject.SetActive(true);
+
 		RequestSerialization();
 	}
 
 	public override void OnDeserialization()
 	{
+		if (color.a == 0) trafaretCam.gameObject.SetActive(false);
+		else trafaretCam.gameObject.SetActive(true);
 		colorPickMaterial.SetColor("_MyCol", color);
 		sprayMaterial.SetColor("_Color", color);
 	}
@@ -168,7 +179,7 @@ public class Spray : UdonSharpBehaviour
 			grainChanger.SetActive(false);
 			colorPicker.SetActive(true);
 
-			colorPicker.transform.position = pickup.transform.position + pickup.transform.forward * 0.15f;
+			colorPicker.transform.position = sprayHead.position + pickup.transform.forward * 0.15f;
 			colorPicker.transform.eulerAngles = new Vector3(0, pickup.transform.eulerAngles.y, 0);
 			var pos = new Vector3(color.linear.r, color.linear.g, color.linear.b);
 			if (pos.x > 1.1f || pos.y > 1.1f || pos.z > 1.1) pos = (pos - Vector3.one) * 1.2f;
@@ -186,7 +197,7 @@ public class Spray : UdonSharpBehaviour
 			var c = color;
 			c.a = 1;
 			grainView.color = c;
-			grainChanger.transform.position = pickup.transform.position + pickup.transform.forward * 0.15f;
+			grainChanger.transform.position = sprayHead.position + pickup.transform.forward * 0.15f;
 			grainChanger.transform.eulerAngles = new Vector3(0, pickup.transform.eulerAngles.y, 0);
 			grain.transform.localPosition = new Vector3(grainMode == 0f ? 0f : (Mathf.Abs(grainMode) / 4f + 0.15f) * Mathf.Sign(grainMode), 0f, 0f);
 			grainChanger.transform.position += grainChanger.transform.position - grain.transform.position;

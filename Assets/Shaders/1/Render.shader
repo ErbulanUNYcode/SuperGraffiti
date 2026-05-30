@@ -58,15 +58,14 @@ Shader "Graffiti/Render"
 			struct v2f
 			{
 				float4 pos : SV_POSITION;
-				float2 uv : TEXCOORD0;
-				linear float3 dif1 : TEXCOORD1;
-				linear float3 dif2 : TEXCOORD2;
-				linear float3 dif3 : TEXCOORD3;
-				linear float3 dif4 : TEXCOORD4;
-				linear float3 dif5 : TEXCOORD5;
-				linear float3 dif6 : TEXCOORD6;
-				linear float3 dif7 : TEXCOORD7;
-				linear float3 dif8 : TEXCOORD8;
+				noperspective float3 dif1 : TEXCOORD0;
+				noperspective float3 dif2 : TEXCOORD1;
+				noperspective float3 dif3 : TEXCOORD2;
+				noperspective float3 dif4 : TEXCOORD3;
+				noperspective float3 dif5 : TEXCOORD4;
+				noperspective float3 dif6 : TEXCOORD5;
+				noperspective float3 dif7 : TEXCOORD6;
+				noperspective float3 dif8 : TEXCOORD7;
 			};
 
 			v2f vert (appdata v)
@@ -79,7 +78,6 @@ Shader "Graffiti/Render"
 				{
 					v.vertex.xyz = 0;
 					o.pos = UnityObjectToClipPos(v.vertex);
-					o.uv = float2(0,0);
 					return o;
 				}
 				float3 ver = v.vertex.xyz;
@@ -112,8 +110,6 @@ Shader "Graffiti/Render"
 				v.vertex.xyz = ver;
 
 				o.pos = UnityObjectToClipPos(v.vertex);
-				float4 screenPos = ComputeScreenPos(o.pos);
-				o.uv = screenPos.xy / screenPos.w;
 
 				float3 worldPos = v.vertex.xyz;
 				float3 difs[8];
@@ -269,7 +265,8 @@ Shader "Graffiti/Render"
 			{
 				uint width, height;
 				_MainTex.GetDimensions(width, height);
-				int2 pixelCoord = int2(i.uv.x * width, i.uv.y * height);
+				float2 uv = i.pos.xy / _ScreenParams.xy;
+				int2 pixelCoord = int2(uv.x * width, uv.y * height);
 				float4 col = _MainTex.Load(int3(pixelCoord, 0));
 				col.a=0;
 				float old = col;

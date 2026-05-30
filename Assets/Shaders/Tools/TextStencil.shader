@@ -3,15 +3,21 @@ Shader "Unlit/RedChannelCull"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        [Toggle] _Reverse ("Reverse", Float) = 0
     }
 
     SubShader
     {
-        Tags { "RenderType"="TransparentCutout" "Queue"="AlphaTest" }
+        Tags
+        {
+            "RenderType"="TransparentCutout"
+            "Queue"="AlphaTest"
+        }
 
         Pass
         {
             Cull Off
+
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -19,7 +25,8 @@ Shader "Unlit/RedChannelCull"
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
-            bool _Reverse;
+
+            float _Reverse;
 
             struct appdata
             {
@@ -41,15 +48,42 @@ Shader "Unlit/RedChannelCull"
                 return o;
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            fixed4 frag(v2f IN) : SV_Target
             {
-                fixed4 tex = tex2D(_MainTex, i.uv);
+                fixed4 tex = tex2D(_MainTex, IN.uv);
 
-                if (_Reverse) tex.r = 1 - tex.r;
+                float center = tex.r;
 
-                clip(tex.r-0.5);
+                if (_Reverse > 0.5)
+                    center = 1 - center;
 
-                return fixed4(0.3,0.2,0.1,1);
+                int a = 0;
+
+                for (int j = 0; j < 16; j++)
+                {
+                    float angle = (float(j) / 16.0) * 6.2831853;
+
+                    float s, c;
+                    sincos(angle, s, c);
+
+                    float2 offset = float2(c*0.002, s*0.008);
+
+                    float r = tex2D(_MainTex, IN.uv + offset).r;
+
+                    if (_Reverse > 0.5)
+                        r = 1 - r;
+
+                    a += r > 0.5;
+                }
+
+                fixed4 col = fixed4(0.15,0.1, 0.05, 1);
+
+                if (a != 16)
+                    col = fixed4(0.15,0.1, 1, 1);
+
+                clip(center - 0.5);
+
+                return col;
             }
             ENDCG
         }
