@@ -3,6 +3,7 @@ Shader "Unlit/ColorPickerNeon"
 	Properties
 	{
 		_MyPos ("My Position", Vector) = (0,0,0,0)
+		_MyScale ("My Scale", Range(0, 1)) = 0.25
 	}
 
 	SubShader
@@ -44,6 +45,7 @@ Shader "Unlit/ColorPickerNeon"
 			};
 
 			float4 _MyPos;
+			float _MyScale;
 
 			v2f vert(appdata v)
 			{
@@ -65,7 +67,7 @@ Shader "Unlit/ColorPickerNeon"
 				float d = length(o.diffAll.xz);
 				float a = atan2(o.diffAll.x, o.diffAll.z) - _MyPos.w;
 				o.diffAll.xz = float2(sin(a), cos(a)) * d;
-
+				o.diffAll /= _MyScale;
 				return o;
 			}
 
@@ -74,7 +76,7 @@ Shader "Unlit/ColorPickerNeon"
 				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
 				float3 c = i.color.rgb;
-				float3 baseCol = i.diffAll * i.diffAll * 11.1;
+				float3 baseCol = i.diffAll * i.diffAll * 0.6945;
 
 				if (c.r > 0.99 && c.g < 0.01 && c.b < 0.01)
 				{

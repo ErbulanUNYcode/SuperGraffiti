@@ -38,6 +38,7 @@ Shader "Graffiti/Render"
 			fixed4 _Col[8];
 			float4 _Grain1;
 			float4 _Grain2;
+			float _Dist[8];
 			sampler2D  _TrafTex0;
 			sampler2D  _TrafTex1;
 			sampler2D  _TrafTex2;
@@ -71,40 +72,50 @@ Shader "Graffiti/Render"
 			v2f vert (appdata v)
 			{
 				v2f o =(v2f)0;
+
+				//current spray data
 				int id = round(v.color.r*255);
 				float3 pos = _Pos[id].xyz;
 				float2 rot = _Rot[id].xy;
-				if((_CurrentR!=id && _CurrentL!=id && _Col[id].a == 0) || pos.z>0 || pos.z<-2.12)
+				float dist = _Dist[id];
+
+				float3 ver = v.vertex.xyz/2.08*(dist+0.05);	
+
+				//exceptions
+				if((_CurrentR!=id && _CurrentL!=id && _Col[id].a == 0) || pos.z>0 || pos.z<-length(ver))
 				{
 					v.vertex.xyz = 0;
 					o.pos = UnityObjectToClipPos(v.vertex);
 					return o;
 				}
-				float3 ver = v.vertex.xyz;
+
+				//rotation x
 				float a=atan2(ver.y,ver.z) - rot.x;
 				float l=length(ver.yz);
 				ver.yz = float2(sin(a),cos(a))*l;
+
+				//rotation y
 				a=atan2(ver.x,ver.z) + rot.y;
 				l=length(ver.xz);
 				ver.xz = float2(sin(a),cos(a))*l;
-				bool b=ver.z>0;
+
+				//position
 				ver+=pos.xyz;
-				l=4.4944-pos.z*pos.z;
-				float3 offset = ver - pos.xyz;
+				
+				//vertex is out of canvas
+				bool b=ver.z>0;
+
 				if(b)
 				{
-					ver = pos - offset/offset.z*pos.z;
-					offset = ver - pos.xyz;
-					if(offset.x*offset.x + offset.y*offset.y > l)
-					{
-						a = atan2(offset.x,offset.y);
-						ver.xy = float2(sin(a),cos(a))*sqrt(l) + pos.xy;
-					}
+					ver = pos.xyz + (ver-pos.xyz)/(ver.z-pos.z)*(-pos.z);
 				}
 				else
 				{
-					a = atan2(offset.x,offset.y);
-					ver.xy = float2(sin(a),cos(a))*sqrt(l)+ pos.xy;
+					float3 offset = ver-pos.xyz;
+					l=length(offset);
+					offset.z = cos(asin(-pos.z/l))*l;
+					offset.xy = offset.xy/length(offset.xy)*offset.z;
+					ver = pos.xyz + offset;
 				}
 				ver.z=0;
 				v.vertex.xyz = ver;
@@ -141,14 +152,14 @@ Shader "Graffiti/Render"
 					difs[i] = dif;
 				}
 				
-				o.dif1 = difs[0];
-				o.dif2 = difs[1];
-				o.dif3 = difs[2];
-				o.dif4 = difs[3];
-				o.dif5 = difs[4];
-				o.dif6 = difs[5];
-				o.dif7 = difs[6];
-				o.dif8 = difs[7];
+				o.dif1 = difs[0]/_Dist[0];
+				o.dif2 = difs[1]/_Dist[1];
+				o.dif3 = difs[2]/_Dist[2];
+				o.dif4 = difs[3]/_Dist[3];
+				o.dif5 = difs[4]/_Dist[4];
+				o.dif6 = difs[5]/_Dist[5];
+				o.dif7 = difs[6]/_Dist[6];
+				o.dif8 = difs[7]/_Dist[7];
 
 				return o;
 			}
@@ -257,7 +268,7 @@ Shader "Graffiti/Render"
 					}
 				}
 
-				return result;
+				return min(result,1);
 			}
 
 

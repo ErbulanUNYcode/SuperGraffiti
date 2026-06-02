@@ -2,6 +2,7 @@
 using UdonSharp;
 using UnityEngine;
 using UnityEngine.UI;
+using VRC.SDKBase;
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class Coursor : UdonSharpBehaviour
@@ -12,6 +13,11 @@ public class Coursor : UdonSharpBehaviour
 	private Image point;
 	[SerializeField]
 	private Transform direction;
+	private VRCPlayerApi localPlayer;
+	private void Start()
+	{
+		localPlayer = Networking.LocalPlayer;
+	}
 
 	public Vector2 GetPos(Canvas canvas, Vector3 handPos, Quaternion dir)
 	{
@@ -63,6 +69,8 @@ public class Coursor : UdonSharpBehaviour
 		point.transform.localRotation = Quaternion.identity;
 		point.transform.localPosition = new Vector3(pos.x - canvas.GetComponent<RectTransform>().rect.width / 2f, pos.y - canvas.GetComponent<RectTransform>().rect.height / 2f, 0f);
 		laser.SetPositions(new Vector3[] { handPos, canvas.transform.TransformPoint(point.transform.localPosition) });
+		laser.widthMultiplier = localPlayer.GetAvatarEyeHeightAsMeters() * 0.002f;
+		point.transform.localScale = Vector3.one;
 	}
 
 	private void Update()

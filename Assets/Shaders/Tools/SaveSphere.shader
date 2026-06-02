@@ -4,6 +4,8 @@ Shader "Custom/SaveSphere"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _IconTex ("Icon", 2D) = "white" {}
+        _IsIcon ("Is Icon", Range(0,1)) = 0
+        _Scale ("Scale", Float) = 1
     }
 
     SubShader
@@ -24,6 +26,8 @@ Shader "Custom/SaveSphere"
 
             sampler2D _MainTex;
             sampler2D _IconTex;
+            bool _IsIcon;
+            float _Scale;
 
             struct appdata
             {
@@ -44,7 +48,7 @@ Shader "Custom/SaveSphere"
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.objClip = UnityObjectToClipPos(float4(0,0,0,1));
                 o.fov = 1/abs(UNITY_MATRIX_P._m11);
-                o.scale = unity_ObjectToWorld._m00*3;
+                o.scale = length(unity_ObjectToWorld._m00_m01_m02)*(3+sin(_Time*100)*0.2);
                 return o;
             }
 
@@ -68,12 +72,14 @@ Shader "Custom/SaveSphere"
 
                     uv.x *= _ScreenParams.x / _ScreenParams.y;
 
-                    uv *= i.objClip.w * 5.0*i.fov/i.scale;
+                    uv *= i.objClip.w * 5.0*i.fov/i.scale/_Scale;
 
                     uv += 0.5;
 
                     return tex2D(_IconTex, uv);
                 }
+
+                if(_IsIcon) clip(-1);
 
                 return float4(tex2D(_MainTex, screenUV).rgb,1);
             }

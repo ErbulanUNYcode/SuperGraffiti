@@ -28,9 +28,9 @@ TagManager:
   - HardwareObjects
   - reserved4
   - reserved3
-  - view
-  - elevator
-  - 
+  - allView
+  - onlyView
+  - hide
   - 
   - 
   - 

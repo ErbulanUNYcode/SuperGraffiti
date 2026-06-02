@@ -24,6 +24,8 @@ Shader "Custom/FakeMetal_Unlit"
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
+
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -32,6 +34,8 @@ Shader "Custom/FakeMetal_Unlit"
                 float3 worldPos : TEXCOORD0;
                 float3 worldNormal : TEXCOORD1;
                 float2 uv : TEXCOORD2;
+
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             sampler2D _MainTex;
@@ -39,9 +43,13 @@ Shader "Custom/FakeMetal_Unlit"
             float4 _MainTex_ST;
             float _Metallic;
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
+
+                UNITY_SETUP_INSTANCE_ID(v);
+                UNITY_INITIALIZE_OUTPUT(v2f, o);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
@@ -51,8 +59,10 @@ Shader "Custom/FakeMetal_Unlit"
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            fixed4 frag(v2f i) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
                 float3 N = normalize(i.worldNormal);
                 float3 V = normalize(UnityWorldSpaceViewDir(i.worldPos));
                 float3 R = reflect(-V, N);
@@ -60,7 +70,7 @@ Shader "Custom/FakeMetal_Unlit"
                 float3 albedo = tex2D(_MainTex, i.uv).rgb;
                 float3 env = texCUBElod(_Cube, float4(R, 0)).rgb;
 
-                float3 result = lerp(min(albedo,1), env, (_Metallic*2+albedo)/3);
+                float3 result = lerp(albedo, env, saturate((_Metallic * 2 + albedo) / 3));
 
                 return float4(result, 1);
             }

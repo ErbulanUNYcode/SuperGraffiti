@@ -63,7 +63,7 @@ Shader "Unlit/ColorPicker_Outline"
 
 				float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
 				float fresnel = 1 - saturate(dot(normalize(i.worldNormal), viewDir));
-				float3 col = fresnel < 0.4
+				float3 col = fresnel < 0.6
 					? _MyCol.rgb*=_MyCol.rgb
 					: (normalize(0.5 - _MyCol.rgb) + 0.5);
 

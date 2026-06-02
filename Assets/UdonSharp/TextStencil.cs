@@ -20,6 +20,7 @@ public class TextStencil : UdonSharpBehaviour
 	[UdonSynced] private bool reverse = false;
 	[UdonSynced] private float size = 1f;
 	[UdonSynced] private int font = 0;
+	[UdonSynced] private float scale = 0.1f;
 
 	private VRCPlayerApi localPlayer;
 
@@ -36,6 +37,8 @@ public class TextStencil : UdonSharpBehaviour
 			UI.SetActive(false);
 			return;
 		}
+		var scale = pickup.currentPlayer.GetAvatarEyeHeightAsMeters() / 20;
+		transform.localScale = Vector3.one * scale;
 
 		if (pickup.currentPlayer != localPlayer)
 		{
@@ -43,6 +46,8 @@ public class TextStencil : UdonSharpBehaviour
 			UI.SetActive(false);
 			return;
 		}
+
+		this.scale = scale;
 
 		UI.SetActive(true);
 
@@ -68,6 +73,10 @@ public class TextStencil : UdonSharpBehaviour
 		fonts[font].gameObject.SetActive(true);
 		foreach (var f in fonts) f.text = text;
 		inputField.text = text;
+
+		if (pickup.IsHeld) return;
+
+		transform.localScale = Vector3.one * scale;
 	}
 
 	public void NextFont()

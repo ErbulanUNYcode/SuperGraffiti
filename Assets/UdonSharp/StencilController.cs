@@ -13,13 +13,12 @@ public class StencilController : UdonSharpBehaviour
 	[UdonSynced] private bool reverce = false;
 	[SerializeField]
 	[UdonSynced] private bool mirror = true;
-	[SerializeField]
-	[UdonSynced] private bool collide = false;
 
 	[SerializeField]
 	[UdonSynced] private Vector2 point1Val;
 	[SerializeField]
 	[UdonSynced] private Vector2 point2Val;
+	[UdonSynced] private float size = 0.1f;
 
 	[SerializeField] private VRC_Pickup pickup;
 	[SerializeField] private Canvas UI;
@@ -54,7 +53,6 @@ public class StencilController : UdonSharpBehaviour
 		ChangeScale(scale.value);
 		material.SetInt("_Reverse", reverce ? 1 : 0);
 		material.SetInt("_Mirror", mirror ? 1 : 0);
-		material.SetInt("_Collide", collide ? 1 : 0);
 	}
 
 	private void Update()
@@ -66,12 +64,18 @@ public class StencilController : UdonSharpBehaviour
 			return;
 		}
 
+		var size = pickup.currentPlayer.GetAvatarEyeHeightAsMeters() / 20;
+		transform.localScale = Vector3.one * size;
+
 		if (pickup.currentPlayer != localPlayer)
 		{
 			Networking.SetOwner(pickup.currentPlayer, gameObject);
 			UI.gameObject.SetActive(false);
 			return;
 		}
+
+		this.size = size;
+
 		bool hand = pickup.currentHand == VRC_Pickup.PickupHand.Right;
 		var handPos = hand ? localPlayer.GetBonePosition(HumanBodyBones.LeftHand) : localPlayer.GetBonePosition(HumanBodyBones.RightHand);
 		var handRot = hand ? localPlayer.GetBoneRotation(HumanBodyBones.LeftHand) : localPlayer.GetBoneRotation(HumanBodyBones.RightHand);
@@ -91,7 +95,6 @@ public class StencilController : UdonSharpBehaviour
 		ChangeScale(scale.value);
 		material.SetInt("_Reverse", reverce ? 1 : 0);
 		material.SetInt("_Mirror", mirror ? 1 : 0);
-		material.SetInt("_Collide", collide ? 1 : 0);
 	}
 
 	public void ChangeVertices(int count)
@@ -123,8 +126,11 @@ public class StencilController : UdonSharpBehaviour
 		ChangeScale(scaleVal);
 		material.SetInt("_Reverse", reverce ? 1 : 0);
 		material.SetInt("_Mirror", mirror ? 1 : 0);
-		material.SetInt("_Collide", collide ? 1 : 0);
 		UpdateCurve();
+
+		if (pickup.IsHeld) return;
+
+		transform.localScale = Vector3.one * size;
 	}
 
 	public void Reverse()
@@ -135,11 +141,6 @@ public class StencilController : UdonSharpBehaviour
 	public void Mirror()
 	{
 		mirror = !mirror;
-	}
-
-	public void Collide()
-	{
-		collide = !collide;
 	}
 
 	Slider activeSlider = null;
@@ -195,20 +196,18 @@ public class StencilController : UdonSharpBehaviour
 
 		if (!activeButton && activeSlider == null && !activePoint)
 		{
-			if (pointerPos.x > 15 && pointerPos.x < 65 && pointerPos.y < -60 && pointerPos.y > -110)
+			if (pointerPos.y < -60 && pointerPos.y > -110)
 			{
-				activeButton = true;
-				Reverse();
-			}
-			else if (pointerPos.x > 75 && pointerPos.x < 125 && pointerPos.y < -60 && pointerPos.y > -110)
-			{
-				activeButton = true;
-				Mirror();
-			}
-			else if (pointerPos.x > 135 && pointerPos.x < 185 && pointerPos.y < -60 && pointerPos.y > -110)
-			{
-				activeButton = true;
-				Collide();
+				if (pointerPos.x > 45 && pointerPos.x < 95)
+				{
+					activeButton = true;
+					Reverse();
+				}
+				else if (pointerPos.x > 105 && pointerPos.x < 155)
+				{
+					activeButton = true;
+					Mirror();
+				}
 			}
 		}
 	}
@@ -300,7 +299,6 @@ public class StencilController : UdonSharpBehaviour
 	{
 		material.SetInt("_Reverse", reverce ? 1 : 0);
 		material.SetInt("_Mirror", mirror ? 1 : 0);
-		material.SetInt("_Collide", collide ? 1 : 0);
 		material.SetInt("_Count", (int)vert.value);
 		material.SetFloat("_Fold", fold.value);
 		ChangeScale(scale.value);

@@ -14,22 +14,25 @@ public class Graffiti : UdonSharpBehaviour
 	[SerializeField] private ReadRenderTexture RTSync;
 	private Vector4[] positions;
 	private Vector4[] rotations;
+	private Color[] colors;
+	private float[] dists;
+
+
 
 	private Vector4[] skip;
 
-	private Color[] colors;
 	[SerializeField] private MeshRenderer meshRenderer;
 	private bool contOneFrame = true;
 	private void Start()
 	{
 		var cam = VRCCameraSettings.ScreenCamera;
 		var layers = cam.CullingMask;
-		layers.value &= ~(1 << LayerMask.NameToLayer("Default"));
+		layers.value &= ~(1 << 25);
 		cam.CullingMask = layers;
-
 		positions = new Vector4[sprays.Length];
 		rotations = new Vector4[sprays.Length];
 		colors = new Color[sprays.Length];
+		dists = new float[sprays.Length];
 
 		skip = new Vector4[sprays.Length];
 
@@ -58,6 +61,7 @@ public class Graffiti : UdonSharpBehaviour
 
 		alphaClearMaterial.SetVectorArray("_Pos", positions);
 		alphaClearMaterial.SetVectorArray("_Rot", rotations);
+		alphaClearMaterial.SetFloatArray("_Dist", dists);
 
 		for (int i = 0; i < sprays.Length; i++)
 		{
@@ -67,6 +71,7 @@ public class Graffiti : UdonSharpBehaviour
 			rotations[i] = s.rot;
 			rotations[i].w = Random.value;
 			colors[i] = s.col;
+			dists[i] = s.dist;
 			if (s.isCurrentRight) currentRight = i;
 			if (s.isCurrentLeft) currentLeft = i;
 		}
@@ -83,5 +88,6 @@ public class Graffiti : UdonSharpBehaviour
 		material.SetVector("_Grain2", new Vector4(sprays[4].gr, sprays[5].gr, sprays[6].gr, sprays[7].gr) * 2);
 		material.SetInt("_CurrentR", currentRight);
 		material.SetInt("_CurrentL", currentLeft);
+		material.SetFloatArray("_Dist", dists);
 	}
 }

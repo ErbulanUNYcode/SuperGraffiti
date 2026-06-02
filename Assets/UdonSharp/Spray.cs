@@ -26,10 +26,12 @@ public class Spray : UdonSharpBehaviour
 	[SerializeField] private VRCPickup pickup;
 	[SerializeField] private Transform trafaretCam;
 	[SerializeField] private Transform sprayHead;
+	[UdonSynced] private float size = 0.1f;
 
 	public Vector3 pos => trafaretCam.transform.position + Vector3.down * 20 - trafaretCam.transform.forward * 0.07f;
 	public Vector3 rot => trafaretCam.eulerAngles / 180 * 3.14159265358979f;
 	public Color col => color;
+	public float dist => pickup.transform.localScale.x * 15;
 	public float gr => grainMode;
 	public bool isCurrentRight => pickup.IsHeld && pickup.currentPlayer == localPlayer && pickup.currentHand == VRC_Pickup.PickupHand.Right;
 	public bool isCurrentLeft => pickup.IsHeld && pickup.currentPlayer == localPlayer && pickup.currentHand == VRC_Pickup.PickupHand.Left;
@@ -80,8 +82,9 @@ public class Spray : UdonSharpBehaviour
 			return;
 		}
 
+		size = scale;
 
-		if (pickup.transform.position.z > 0)
+		if (sprayHead.position.z > 0)
 		{
 			return;
 		}
@@ -90,7 +93,7 @@ public class Spray : UdonSharpBehaviour
 		{
 			if (colorPicker.activeSelf)
 			{
-				var pos = sprayHead.position + pickup.transform.forward * 0.15f;
+				var pos = sprayHead.position + pickup.transform.forward * 0.3f * colorPicker.transform.localScale.x;
 
 				if (pos != Vector3.zero)
 
@@ -112,7 +115,7 @@ public class Spray : UdonSharpBehaviour
 
 			if (grainChanger.activeSelf)
 			{
-				grain.transform.position = sprayHead.position + pickup.transform.forward * 0.15f;
+				grain.transform.position = sprayHead.position + pickup.transform.forward * 0.3f * grainChanger.transform.localScale.x;
 				grain.transform.localPosition = new Vector3(Mathf.Abs(grain.transform.localPosition.x) > 0.15 ? Mathf.Clamp(grain.transform.localPosition.x, -0.75f, 0.75f) : 0, 0, 0);
 				grainMode = grain.transform.localPosition.x;
 				grainMode = Mathf.Max(0, Mathf.Abs(grainMode) - 0.15f) * (grainMode > 0 ? 4 : -4);
@@ -137,6 +140,8 @@ public class Spray : UdonSharpBehaviour
 		else trafaretCam.gameObject.SetActive(true);
 		colorPickMaterial.SetColor("_MyCol", color);
 		sprayMaterial.SetColor("_Color", color);
+		if (pickup.IsHeld) return;
+		pickup.transform.localScale = Vector3.one * size;
 	}
 
 	public override void InputUse(bool value, UdonInputEventArgs args)
@@ -178,8 +183,8 @@ public class Spray : UdonSharpBehaviour
 			if (colorPicker.activeSelf) return;
 			grainChanger.SetActive(false);
 			colorPicker.SetActive(true);
-
-			colorPicker.transform.position = sprayHead.position + pickup.transform.forward * 0.15f;
+			ResizeColorPicker();
+			colorPicker.transform.position = sprayHead.position + pickup.transform.forward * 0.3f * colorPicker.transform.localScale.x;
 			colorPicker.transform.eulerAngles = new Vector3(0, pickup.transform.eulerAngles.y, 0);
 			var pos = new Vector3(color.linear.r, color.linear.g, color.linear.b);
 			if (pos.x > 1.1f || pos.y > 1.1f || pos.z > 1.1) pos = (pos - Vector3.one) * 1.2f;
@@ -187,7 +192,9 @@ public class Spray : UdonSharpBehaviour
 			colorPicker.transform.position += colorPicker.transform.position - colorPick.transform.position;
 			pos = colorPicker.transform.position;
 			colorPickerMaterial.SetVector("_MyPos", new Vector4(pos.x, pos.y, pos.z, colorPicker.transform.rotation.eulerAngles.y / 180f * 3.14159265358979f));
+			colorPickerMaterial.SetFloat("_MyScale", colorPicker.transform.localScale.x);
 			colorNeonMaterial.SetVector("_MyPos", new Vector4(pos.x, pos.y, pos.z, colorPicker.transform.rotation.eulerAngles.y / 180f * 3.14159265358979f));
+			colorNeonMaterial.SetFloat("_MyScale", colorPicker.transform.localScale.x);
 		}
 		else if (value < -0.8)
 		{
@@ -197,7 +204,8 @@ public class Spray : UdonSharpBehaviour
 			var c = color;
 			c.a = 1;
 			grainView.color = c;
-			grainChanger.transform.position = sprayHead.position + pickup.transform.forward * 0.15f;
+			ResizeGrainChanger();
+			grainChanger.transform.position = sprayHead.position + pickup.transform.forward * 0.3f * grainChanger.transform.localScale.x;
 			grainChanger.transform.eulerAngles = new Vector3(0, pickup.transform.eulerAngles.y, 0);
 			grain.transform.localPosition = new Vector3(grainMode == 0f ? 0f : (Mathf.Abs(grainMode) / 4f + 0.15f) * Mathf.Sign(grainMode), 0f, 0f);
 			grainChanger.transform.position += grainChanger.transform.position - grain.transform.position;
@@ -209,6 +217,22 @@ public class Spray : UdonSharpBehaviour
 			if (grainChanger.activeSelf)
 				grainChanger.SetActive(false);
 		}
+	}
+
+	private void ResizeColorPicker()
+	{
+		float size = pickup.currentPlayer.GetAvatarEyeHeightAsMeters() / 6;
+		colorPicker.transform.localScale = Vector3.one * size;
+		size *= 0.08f;
+		var lineRenderers = colorPicker.GetComponentsInChildren<LineRenderer>();
+		foreach (var lineRenderer in lineRenderers)
+			lineRenderer.widthMultiplier = size;
+	}
+
+	private void ResizeGrainChanger()
+	{
+		float size = pickup.currentPlayer.GetAvatarEyeHeightAsMeters() / 6;
+		grainChanger.transform.localScale = Vector3.one * size;
 	}
 
 	Vector3 Snap(Vector3 v)
